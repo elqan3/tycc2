@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>نشر خبر أو فعالية - مركز رعاية الشباب</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Cairo', Arial, sans-serif; direction: rtl; background: #f9f9f9; padding:20px; color:#222; }
+        h1 { color:#003366; margin-bottom:20px; }
+        form { max-width:500px; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+        label { display:block; margin:10px 0 4px; }
+        input, textarea { width:100%; padding:8px; margin-bottom:12px; border:1px solid #ccc; border-radius:4px; font-size:0.95rem; }
+        button { padding:8px 16px; background:#003366; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+        button:hover { background:#0055aa; }
+    </style>
+</head>
+<body>
+
+<h1>نشر خبر أو فعالية جديدة</h1>
+
+<form action="/add_event" method="POST" enctype="multipart/form-data">
+    <label>عنوان الخبر / الفعالية:</label>
+    <input type="text" name="title" required>
+
+    <label>الوصف:</label>
+    <textarea name="description" rows="5" required></textarea>
+
+    <label>المكان:</label>
+    <input type="text" name="place">
+
+    <label>التاريخ (YYYY-MM-DD):</label>
+    <input type="text" name="date">
+
+    <label>صورة الخبر / الفعالية:</label>
+    <input type="file" name="image">
+
+    <button type="submit">نشر</button>
+</form>
+
+</body>
+</html>

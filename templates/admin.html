@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة الأدمن - مركز رعاية الشباب</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Cairo', Arial, sans-serif; direction: rtl; background: #f9f9f9; padding: 20px; color:#222; }
+        h1 { color: #003366; margin-bottom: 20px; }
+        h2 { color: #003366; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ccc; margin-top:30px; }
+        .button { padding: 6px 12px; background: #003366; color: #fff; text-decoration: none; border-radius: 4px; margin:0 2px; font-size:0.85rem; }
+        .button.reject { background: #c0392b; }
+        .edit-btn, .save-btn { background: #27ae60; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin-left:6px; font-size:0.85rem; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: #fff; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: right; font-size:0.95rem; }
+        th { background: #e0e0e0; }
+        .editable { background:#fff8dc; }
+        .toggle-section { cursor:pointer; font-size:0.85rem; background:#0b7dda; color:#fff; padding:3px 8px; border-radius:4px; text-decoration:none; }
+        @media (max-width: 780px) {
+            body { padding: 12px; }
+            table, th, td { font-size: 0.85rem; }
+            .edit-btn, .save-btn { font-size:0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>لوحة الأدمن - مركز رعاية الشباب</h1>
+
+<!-- الأعضاء -->
+<h2>الأعضاء <a class="toggle-section" onclick="toggleSection('members-section')">إخفاء/إظهار</a></h2>
+<div id="members-section">
+    <button class="edit-btn" id="enable-edit">تعديل</button>
+    <button class="save-btn" id="save-members">حفظ</button>
+    <table id="members-table">
+        <tr>
+            <th>الاسم</th>
+            <th>العمر</th>
+            <th>الهاتف</th>
+            <th>البريد</th>
+            <th>الصفة</th>
+            <th>رقم تسلسلي</th>
+        </tr>
+        {% for m in members %}
+        <tr data-id="{{ m[0] }}">
+            <td class="editable" contenteditable="false">{{ m[1] }}</td>
+            <td class="editable" contenteditable="false">{{ m[2] }}</td>
+            <td class="editable" contenteditable="false">{{ m[3] }}</td>
+            <td class="editable" contenteditable="false">{{ m[4] }}</td>
+            <td class="editable" contenteditable="false">{{ m[5] }}</td>
+            <td class="editable" contenteditable="false">{{ m[6] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<!-- طلبات العضوية -->
+<h2>طلبات العضوية <a class="toggle-section" onclick="toggleSection('requests-section')">إخفاء/إظهار</a></h2>
+<div id="requests-section">
+    <table>
+        <tr>
+            <th>الاسم</th>
+            <th>العمر</th>
+            <th>الهاتف</th>
+            <th>البريد</th>
+            <th>السبب</th>
+            <th>إجراءات</th>
+        </tr>
+        {% for r in requests %}
+        <tr>
+            <td>{{ r[1] }}</td>
+            <td>{{ r[2] }}</td>
+            <td>{{ r[3] }}</td>
+            <td>{{ r[4] }}</td>
+            <td>{{ r[5] }}</td>
+            <td>
+                <a class="button approve-btn" data-id="{{ r[0] }}">موافقة</a>
+                <a class="button reject" href="/reject_request/{{ r[0] }}">رفض</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<!-- زر لنشر خبر / فعالية -->
+<h2>نشر خبر أو فعالية جديدة <a href="/templates/post.html" class="button">الذهاب للنشر</a></h2>
+
+<script>
+    function toggleSection(id){
+        const section = document.getElementById(id);
+        section.style.display = section.style.display === "none" ? "block" : "none";
+    }
+
+    // Modal الموافقة
+    const approveModal = document.getElementById('approve-modal');
+    const approveBtns = document.querySelectorAll('.approve-btn');
+    const closeModalBtn = approveModal?.querySelector('.close-btn');
+    const modalRequestId = document.getElementById('modal-request-id');
+
+    approveBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            approveModal.style.display = 'flex';
+            modalRequestId.value = btn.dataset.id;
+        });
+    });
+
+    closeModalBtn?.addEventListener('click', () => { approveModal.style.display = 'none'; });
+    window.addEventListener('click', e => { if(e.target === approveModal) approveModal.style.display = 'none'; });
+
+    document.getElementById('approve-form')?.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const request_id = modalRequestId.value;
+        const role = this.role.value;
+        const serial_number = this.serial_number.value;
+
+        const res = await fetch(`/approve_request/${request_id}`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({role, serial_number})
+        });
+
+        if(res.ok){
+            location.reload();
+        }else{
+            alert('حدث خطأ أثناء الإضافة');
+        }
+    });
+
+    const enableEditBtn = document.getElementById('enable-edit');
+    const saveMembersBtn = document.getElementById('save-members');
+    const memberRows = document.querySelectorAll('#members-table tr[data-id]');
+
+    enableEditBtn.addEventListener('click', () => {
+        memberRows.forEach(row => {
+            row.querySelectorAll('.editable').forEach(td => td.contentEditable = true);
+        });
+    });
+
+    saveMembersBtn.addEventListener('click', async () => {
+        for(let row of memberRows){
+            const id = row.dataset.id;
+            const data = {
+                name: row.children[0].innerText,
+                age: row.children[1].innerText,
+                phone: row.children[2].innerText,
+                email: row.children[3].innerText,
+                role: row.children[4].innerText,
+                serial_number: row.children[5].innerText
+            };
+            await fetch(`/update_member/${id}`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(data)
+            });
+        }
+        alert('تم حفظ التعديلات');
+    });
+</script>
+
+</body>
+</html>
